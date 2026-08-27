@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(uuid())
+  email            String         @unique
+  username         String         @unique
+  passwordHash     String         @map("password_hash")
+  storageUsedBytes BigInt         @default(0) @map("storage_used_bytes")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  files         File[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model File {
+  id           String     @id @default(uuid())
+  ownerId      String     @map("owner_id")
+  originalName String     @map("original_name")
+  storageKey   String     @unique @map("storage_key")
+  mimeType     String     @map("mime_type")
+  sizeBytes    BigInt     @map("size_bytes")
+  visibility   Visibility @default(PRIVATE)
+  shareToken   String     @unique @map("share_token") @default(uuid())
+  uploadedAt   DateTime   @default(now()) @map("uploaded_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Composite index: list query filters by owner and sorts by date
+  @@index([ownerId, uploadedAt(sort: Desc)])
+  // Separate index for shareToken-based public lookup
+  @@index([shareToken])
+  // Composite for search+filter queries
+  @@index([ownerId, visibility])
+  @@map("files")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Composite for the token lookup on refresh (userId + tokenHash + revoked)
+  @@index([userId, tokenHash, revoked])
+  @@map("refresh_tokens")
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
