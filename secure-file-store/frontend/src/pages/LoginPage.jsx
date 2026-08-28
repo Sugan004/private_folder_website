@@ -14,14 +14,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const errorTimerRef = useRef(null);
 
-  // Auto-clear error after 5 seconds
-  useEffect(() => {
-    if (error) {
-      clearTimeout(errorTimerRef.current);
-      errorTimerRef.current = setTimeout(() => setError(''), 5000);
-    }
-    return () => clearTimeout(errorTimerRef.current);
-  }, [error]);
+  // Clear error when user starts typing again
+  function handleEmailChange(e) {
+    setEmail(e.target.value);
+    if (error) setError('');
+  }
+
+  function handlePasswordChange(e) {
+    setPassword(e.target.value);
+    if (error) setError('');
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -73,7 +75,7 @@ export default function LoginPage() {
               className="input-field"
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               required
               autoComplete="email"
             />
@@ -88,7 +90,7 @@ export default function LoginPage() {
                 className="input-field"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 required
                 autoComplete="current-password"
                 style={{ paddingRight: '3rem' }}
