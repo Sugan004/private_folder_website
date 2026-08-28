@@ -517,7 +517,8 @@ h3 { font-size: 1.125rem; font-weight: 600; }
   animation: slideUp 0.2s ease;
 }
 @keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
-.modal-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 1.25rem; }
+.modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; }
+.modal-title { font-weight: 700; font-size: 1.1rem; margin: 0; }
 .share-link-row { display: flex; gap: 0.5rem; align-items: center; }
 .share-link-input {
   flex: 1;
