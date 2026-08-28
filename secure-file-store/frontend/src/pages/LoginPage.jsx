@@ -14,10 +14,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const errorTimerRef = useRef(null);
 
-  function clearError() {
-    if (error) setError('');
-  }
-
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
@@ -69,7 +65,6 @@ export default function LoginPage() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onFocus={clearError}
               required
               autoComplete="email"
             />
@@ -85,7 +80,6 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onFocus={clearError}
                 required
                 autoComplete="current-password"
                 style={{ paddingRight: '3rem' }}
