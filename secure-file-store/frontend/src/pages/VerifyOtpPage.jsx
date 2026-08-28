@@ -155,12 +155,14 @@ export default function VerifyOtpPage() {
                   textAlign: 'center',
                   fontSize: '1.5rem',
                   fontWeight: '700',
-                  background: 'var(--bg-input)',
-                  border: `2px solid ${digit ? '#3b82f6' : 'var(--border-color)'}`,
+                  background: 'var(--bg-elevated)',
+                  border: `2px solid ${digit ? 'var(--accent)' : 'var(--border-strong)'}`,
                   borderRadius: '10px',
                   color: 'var(--text-primary)',
                   outline: 'none',
-                  transition: 'border-color 0.2s',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                  boxShadow: digit ? '0 0 0 3px var(--accent-dim)' : 'none',
+                  caretColor: 'var(--accent)',
                 }}
               />
             ))}
