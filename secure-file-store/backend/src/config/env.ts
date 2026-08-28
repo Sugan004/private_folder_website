@@ -30,5 +30,9 @@ export const env = {
   MAX_FILE_SIZE_BYTES: parseInt(process.env.MAX_FILE_SIZE_BYTES || String(200 * 1024 * 1024), 10), // 200 MB
   PART_SIZE_BYTES: parseInt(process.env.PART_SIZE_BYTES || String(5 * 1024 * 1024), 10),           // 5 MB per part
 
-  RESEND_API_KEY: required('RESEND_API_KEY'),
+  SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
+  SMTP_PORT: parseInt(process.env.SMTP_PORT || '465', 10),
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  SMTP_FROM: process.env.SMTP_FROM || 'SecureVault <noreply@securevault.app>',
 };
