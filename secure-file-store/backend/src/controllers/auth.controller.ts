@@ -54,7 +54,7 @@ export async function verifyOtp(req: Request, res: Response, next: NextFunction)
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -83,7 +83,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -107,7 +107,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -138,7 +138,11 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
       await authService.revokeRefreshToken(userId, rawToken);
     }
 
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+    });
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -150,7 +154,11 @@ export async function logoutAll(req: Request, res: Response, next: NextFunction)
   try {
     const userId = (req as AuthenticatedRequest).user?.id;
     if (userId) await authService.revokeAllRefreshTokens(userId);
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+    });
     res.status(204).send();
   } catch (err) {
     next(err);
