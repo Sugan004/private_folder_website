@@ -4,7 +4,7 @@ import { Shield, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, setPendingEmail, resendOtp } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -31,7 +31,19 @@ export default function LoginPage() {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err?.response?.data?.error ?? 'Login failed. Please try again.');
+      const errMsg = err?.response?.data?.error;
+      if (errMsg === 'Please verify your email before logging in.') {
+        // Automatically resend OTP and redirect to verify page
+        setPendingEmail(email);
+        try {
+          await resendOtp(email);
+        } catch (resendErr) {
+          console.error('Failed to resend OTP on login', resendErr);
+        }
+        navigate('/verify-otp');
+      } else {
+        setError(errMsg ?? 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
