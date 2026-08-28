@@ -1,20 +1,12 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { env } from '../config/env';
 
-const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: env.SMTP_PORT === 465, // true for 465, false for other ports
-  auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  },
-});
+const resend = new Resend(env.RESEND_API_KEY);
 
 export async function sendOtpEmail(to: string, otp: string, username: string): Promise<void> {
-  await transporter.sendMail({
-    from: env.SMTP_FROM,
-    to,
+  const { error } = await resend.emails.send({
+    from: 'SecureVault <onboarding@resend.dev>',
+    to, // Note: On Resend Free Tier, 'to' MUST be the email you registered Resend with.
     subject: 'Your SecureVault Verification Code',
     html: `
       <!DOCTYPE html>
@@ -57,4 +49,8 @@ export async function sendOtpEmail(to: string, otp: string, username: string): P
       </html>
     `,
   });
+
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`);
+  }
 }
