@@ -2,17 +2,20 @@ import axios from 'axios';
 import api, { setAccessToken } from '../lib/api';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
+const BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingEmail, setPendingEmail] = useState('');
 
   useEffect(() => {
     (async () => {
       try {
         const { data } = await axios.post(
-          '/api/v1/auth/refresh',
+          `${BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true },
         );
@@ -44,6 +47,18 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (email, username, password) => {
     await api.post('/auth/register', { email, username, password });
+    setPendingEmail(email);
+  }, []);
+
+  const verifyOtp = useCallback(async (email, otp) => {
+    const { data } = await api.post('/auth/verify-otp', { email, otp });
+    setAccessToken(data.accessToken);
+    setUser(data.user);
+    setPendingEmail('');
+  }, []);
+
+  const resendOtp = useCallback(async (email) => {
+    await api.post('/auth/resend-otp', { email });
   }, []);
 
   const logout = useCallback(async () => {
@@ -56,7 +71,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, verifyOtp, resendOtp, pendingEmail }}>
       {children}
     </AuthContext.Provider>
   );

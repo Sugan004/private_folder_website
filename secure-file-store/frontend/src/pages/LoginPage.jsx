@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,16 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const errorTimerRef = useRef(null);
+
+  // Auto-clear error after 5 seconds
+  useEffect(() => {
+    if (error) {
+      clearTimeout(errorTimerRef.current);
+      errorTimerRef.current = setTimeout(() => setError(''), 5000);
+    }
+    return () => clearTimeout(errorTimerRef.current);
+  }, [error]);
 
   async function handleSubmit(e) {
     e.preventDefault();

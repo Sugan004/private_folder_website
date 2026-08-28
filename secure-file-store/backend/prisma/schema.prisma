@@ -15,6 +15,9 @@ model User {
   email            String         @unique
   username         String         @unique
   passwordHash     String         @map("password_hash")
+  isVerified       Boolean        @default(false) @map("is_verified")
+  otpCode          String?        @map("otp_code")
+  otpExpiresAt     DateTime?      @map("otp_expires_at")
   storageUsedBytes BigInt         @default(0) @map("storage_used_bytes")
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")

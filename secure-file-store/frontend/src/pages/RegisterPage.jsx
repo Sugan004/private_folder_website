@@ -31,7 +31,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(email, username, password);
-      navigate('/login', { state: { registered: true } });
+      navigate('/verify-otp');
     } catch (err) {
       setServerError(err?.response?.data?.error ?? 'Registration failed.');
     } finally {

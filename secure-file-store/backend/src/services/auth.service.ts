@@ -10,10 +10,15 @@ import {
   getRefreshTokenExpiry,
 } from '../utils/jwt';
 import { AppError } from '../middleware/errorHandler';
+import { sendOtpEmail } from './email.service';
 
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
+}
+
+function generateOtp(): string {
+  return String(Math.floor(100000 + Math.random() * 900000)); // 6-digit OTP
 }
 
 export async function registerUser(
@@ -31,12 +36,62 @@ export async function registerUser(
   }
 
   const passwordHash = await bcrypt.hash(password, env.BCRYPT_ROUNDS);
+  const otp = generateOtp();
+  const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
   const user = await prisma.user.create({
-    data: { email, username, passwordHash },
+    data: { email, username, passwordHash, otpCode: otp, otpExpiresAt },
     select: { id: true, email: true, username: true },
   });
 
+  // Send OTP email (non-blocking — don't fail registration if email fails)
+  sendOtpEmail(email, otp, username).catch((err) =>
+    console.error('[email] Failed to send OTP:', err),
+  );
+
   return user;
+}
+
+export async function verifyOtp(
+  email: string,
+  otp: string,
+): Promise<{ user: { id: string; email: string; username: string }; tokens: TokenPair }> {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new AppError(404, 'Account not found.');
+  if (user.isVerified) throw new AppError(400, 'Account already verified. Please log in.');
+  if (!user.otpCode || !user.otpExpiresAt) throw new AppError(400, 'No OTP found. Please request a new one.');
+  if (new Date() > user.otpExpiresAt) throw new AppError(400, 'OTP has expired. Please request a new one.');
+  if (user.otpCode !== otp) throw new AppError(400, 'Invalid OTP. Please try again.');
+
+  // Mark verified and clear OTP
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { isVerified: true, otpCode: null, otpExpiresAt: null },
+  });
+
+  const tokens = await _issueTokenPair(user.id, user.email);
+  return {
+    user: { id: user.id, email: user.email, username: user.username },
+    tokens,
+  };
+}
+
+export async function resendOtp(email: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new AppError(404, 'Account not found.');
+  if (user.isVerified) throw new AppError(400, 'Account is already verified.');
+
+  const otp = generateOtp();
+  const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { otpCode: otp, otpExpiresAt },
+  });
+
+  sendOtpEmail(email, otp, user.username).catch((err) =>
+    console.error('[email] Failed to resend OTP:', err),
+  );
 }
 
 export async function loginUser(
@@ -48,6 +103,10 @@ export async function loginUser(
   const valid = user ? await bcrypt.compare(password, user.passwordHash) : false;
   if (!user || !valid) {
     throw new AppError(401, 'Invalid email or password.');
+  }
+
+  if (!user.isVerified) {
+    throw new AppError(403, 'Please verify your email before logging in.');
   }
 
   const tokens = await _issueTokenPair(user.id, user.email);

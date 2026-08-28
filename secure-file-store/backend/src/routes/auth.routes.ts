@@ -9,8 +9,12 @@ import {
   logoutAll,
   refresh,
   me,
+  verifyOtp,
+  resendOtp,
   registerSchema,
   loginSchema,
+  verifyOtpSchema,
+  resendOtpSchema,
 } from '../controllers/auth.controller';
 import { env } from '../config/env';
 
@@ -96,6 +100,10 @@ router.post('/login', authLimiter, validate(loginSchema), login);
  *       401: { description: Refresh token invalid or expired }
  */
 router.post('/refresh', authLimiter, refresh);
+
+// OTP verification routes
+router.post('/verify-otp', authLimiter, validate(verifyOtpSchema), verifyOtp);
+router.post('/resend-otp', authLimiter, validate(resendOtpSchema), resendOtp);
 
 /**
  * @openapi

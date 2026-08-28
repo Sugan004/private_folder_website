@@ -25,13 +25,50 @@ const refreshSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
-export { registerSchema, loginSchema, refreshSchema };
+const verifyOtpSchema = z.object({
+  email: z.string().email(),
+  otp: z.string().length(6, 'OTP must be 6 digits.'),
+});
+
+const resendOtpSchema = z.object({
+  email: z.string().email(),
+});
+
+export { registerSchema, loginSchema, refreshSchema, verifyOtpSchema, resendOtpSchema };
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, username, password } = req.body;
     const user = await authService.registerUser(email, username, password);
-    res.status(201).json({ message: 'Account created successfully.', user });
+    res.status(201).json({ message: 'Account created. Please check your email for the OTP to verify your account.', user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email, otp } = req.body;
+    const { user, tokens } = await authService.verifyOtp(email, otp);
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({ user, accessToken: tokens.accessToken });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email } = req.body;
+    await authService.resendOtp(email);
+    res.status(200).json({ message: 'A new OTP has been sent to your email.' });
   } catch (err) {
     next(err);
   }
