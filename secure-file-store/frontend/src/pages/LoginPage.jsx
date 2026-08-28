@@ -14,14 +14,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const errorTimerRef = useRef(null);
 
-  // Clear error when user starts typing again
-  function handleEmailChange(e) {
-    setEmail(e.target.value);
-    if (error) setError('');
-  }
-
-  function handlePasswordChange(e) {
-    setPassword(e.target.value);
+  function clearError() {
     if (error) setError('');
   }
 
@@ -75,7 +68,8 @@ export default function LoginPage() {
               className="input-field"
               placeholder="you@example.com"
               value={email}
-              onChange={handleEmailChange}
+              onChange={(e) => setEmail(e.target.value)}
+              onFocus={clearError}
               required
               autoComplete="email"
             />
@@ -90,7 +84,8 @@ export default function LoginPage() {
                 className="input-field"
                 placeholder="••••••••"
                 value={password}
-                onChange={handlePasswordChange}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={clearError}
                 required
                 autoComplete="current-password"
                 style={{ paddingRight: '3rem' }}
