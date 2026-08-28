@@ -15,6 +15,9 @@ import healthRoutes from './routes/health.routes';
 
 const app = express();
 
+// Trust proxy is required for express-rate-limit when deployed behind a reverse proxy (like Render/Vercel)
+app.set('trust proxy', 1);
+
 // ── Security headers ──────────────────────────────────────────────────────────
 app.use(helmet());
 
