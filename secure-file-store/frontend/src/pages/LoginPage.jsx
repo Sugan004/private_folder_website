@@ -33,8 +33,8 @@ export default function LoginPage() {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      const errMsg = err?.response?.data?.error;
-      if (errMsg === 'Please verify your email before logging in.') {
+      const errMsg = err?.response?.data?.error || '';
+      if (errMsg.toLowerCase().includes('verify')) {
         // Automatically resend OTP and redirect to verify page
         setPendingEmail(email);
         try {
